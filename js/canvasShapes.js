@@ -1,8 +1,10 @@
-/***
- * ANIMATIONS INIT BASES
-***/
+/**
+ * TRACER LE CENTRE DU BEAT
+ * GÉRER LE LOADER EN ARRANGEANT LE requestAnimFrame
+ */
+
 window.requestAnimFrame = (function (){
-	return window.requestAnimationFrame        ||
+	return window.requestAnimationFrame      ||
 		window.webkitRequestAnimationFrame     ||
 		window.mozRequestAnimationFrame        ||
 		function(callback, element){
@@ -19,178 +21,140 @@ window.cancelAnimationFrame = (function () {
     	};
 })();
 
-/**
- * CANVAS INIT FUNCTIONS
-**/
-var canvas,
-    ctx;
-
-var initCanvas = function (){
-    canvas = document.getElementById('canvas');
-    ctx = canvas.getContext('2d');
-    resize();
+var onError = function (e) {
+	console.log(e);
 };
 
-var resize = function () {
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
-    window.onresize = resize;
-};
+/***
+ * INIT CANVAS VARS
+***/
+var Canvas = function(id){
+  var canvas = document.getElementById(id),
+    ctx = canvas.getContext("2d"),
+    cx = canvas.width/2,
+    cy = canvas.height/2;
 
-var clear = function () {
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-};
+  window.onresize = function () {
+  	canvas.width = window.innerWidth;
+  	canvas.height = window.innerHeight;
+  };
 
-var drawTimeDomain = function () {
-	clear();
-
-
-
-	requestAnimFrame(drawTimeDomain);
-};
-
-/**
- * SHAPES INIT OBJECTS
-**/
-
-// Coords to point
-var Point = function (x, y){
-    this.x = x;
-    this.y = y;
-
-    console.log('New point ('+x+','+y+')');
-};
-
-var Ratio = function (percentX, percentY){
-    this.percentX = percentX / 100;
-    this.percentY = percentY / 100;
-
-    console.log('New ratio ('+percentX+','+percentY+')');
-};
-
-// Mother class for all shapes objects
-var Shape = function (ctx, points, center, origin){
-    this.ctx = ctx;
-    this.points = points;
-    this.center = center;
-    this.origin = origin;
-    this.translateTo(center.x, center.y);
-    this.editAnchor();
-    this.centerCoords();
-};
-
-// Edit anchor position in percent with origin = {origin.x, origin.y}
-Shape.prototype.editAnchor = function (origin){
-    var cx = 0, cy = 0;
-    var pointsTab = this.points;
-
-    for(var i = 0; i < pointsTab.length; i++){
-        cx += (pointsTab[i].x);
-        cy += (pointsTab[i].y);
+  var clearCanvas = function () {
+  	if(ctx != null){
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
+  };
 
-    this.x = ((cx/pointsTab.length) * this.origin.x * 2);
-    this.y = ((cy/pointsTab.length) * this.origin.y * 2);
-};
+  var drawTimeDomain = function () {
+  	clearCanvas();
 
-// Translate to a particular point
-Shape.prototype.translateTo = function (x, y){
-    var pointsTab = this.points;
+  	loader();
 
-    for(var i = 0; i < pointsTab.length; i++){
-        x += (pointsTab[i].x);
-        y += (pointsTab[i].y);
-    }
+  	requestAnimFrame(drawTimeDomain);
+  };
 
-    this.x = (x/pointsTab.length) * this.origin.x/50;
-    this.y = (y/pointsTab.length) * this.origin.y/50;
-};
+  /***
+   * CANVAS PATTERNS
+  ***/
+  var loader = function (){
+  	var roundLoader = roundDash(cx, cy, cy/2, 5, 160);
+  	requestAnimFrame(drawTimeDomain);
+  };
 
-// Translate by addition
-Shape.prototype.translate = function (x, y){
-    this.x += x;
-    this.y += y;
-};
+  /***
+   * CANVAS PATHS
+  ***/
+  var roundDash = function (cx, cy, r, height, number){
+  	var lines = [];
+  	var a = (Math.PI*2)/number;
 
-Shape.prototype.rotate = function (){
+  	for(var i = 0; i<number; i++){
+  		var x1 = cx + (r * Math.cos(a*i));
+  		var y1 = cy + (r * Math.sin(a*i));
 
-};
+  		var x2 = cx + ((r + 5) * Math.cos(a*i));
+  		var y2 = cy + ((r + 5) * Math.sin(a*i));
 
-Shape.prototype.animate = function (x, y, time, ease){
-    this.x;
-    x;
-    this.y;
-    y;
-};
+  		lines.push({x1: x1, y1: y1, x2: x2, y2: y2});
 
-Shape.prototype.draw = function (close){
-    var pointsTab = this.points;
+  		ctx.beginPath();
 
-    ctx.beginPath();
+  		ctx.lineWidth = 1;
+  		ctx.strokeStyle = 'rgb(0, 0, 0)';
 
-    ctx.moveTo(pointsTab[0].x, pointsTab[0].y);
-    for(var i = 1; i < pointsTab.length; i++){
-        ctx.lineTo(pointsTab[i].x, pointsTab[i].y);
-    }
+  		ctx.moveTo(x1,y1);
+  		ctx.lineTo(x2,y2);
 
-    if(close && pointsTab.length >= 2){
-        ctx.closePath();
-    }
-};
+  		ctx.stroke();
+  	}
+  	return lines;
+  };
 
-Shape.prototype.centerCoords = function (){
-    console.log('Le centre est (' + this.x + ',' + this.y + ')');
-};
+  var roundPulse = function (cx, cy, r, lineWidth){
+  	ctx.save();
+  	ctx.beginPath();
+  	ctx.arc(cx, cy, r * amplitudeArray/100, 0, 2 * Math.PI, false);
+  	ctx.lineWidth = lineWidth;
+  	ctx.strokeStyle = 'rgb(0, 0, 0)';
+  	ctx.stroke();
+  	ctx.restore();
+  };
 
-Shape.prototype.stroke = function (lineWidth, strokeStyle = null){
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = strokeStyle;
-    ctx.stroke();
-};
+  var roundFrequency = function (cx, cy, r){
+  	ctx.save();
 
-Shape.prototype.gradient = function (type, steps){
-    if(type === 'linear'){
-        var gradiant = ctx.createLinearGradient(0, 0, this.width, this.height);
-    } else {
-        var gradiant = ctx.createRadialGradient(0, 0, this.width, this.height, 0, 360);
-    }
-    for (var i = 0; i < steps.length; i++){
-        gradiant.addColorStop(i, steps[i]);
-    }
-    this.fill(ctx, gradiant);
-};
+  	var a = (Math.PI*2)/amplitudeArray.length;
+  	var x = cx + (r * Math.cos(a));
+  	var y = cy + (r * Math.sin(a));
 
-Shape.prototype.fill = function (fillStyle){
-    ctx.fillStyle = fillStyle;
-    ctx.fill();
-};
+  	ctx.beginPath();
+  	ctx.lineJoin="round";
+
+  	ctx.lineWidth = 5;
+  	ctx.strokeStyle = 'rgb(0, 0, 0)';
+
+  	getMax();
+  	getMin();
+
+  	for (var i = 0; i < amplitudeArray.length; i++) {
+  		if(amplitudeArray[i]){
+
+  		}
+  	}
+
+  	ctx.closePath();
+  	ctx.stroke();
+  	ctx.restore();
+  };
+
+  var roundDistort = function (cx, cy, r, minAmplitude, maxAmplitude){
+  	ctx.save();
+
+  	var a = (Math.PI*2)/4;
+  	var x = cx + (r * Math.cos(a));
+  	var y = cy + (r * Math.sin(a));
+
+  	ctx.beginPath();
+  	ctx.lineJoin="round";
+
+  	ctx.lineWidth = 5;
+  	ctx.strokeStyle = 'rgb(0, 0, 0)';
+
+  	for (var i = 0; i < amplitudeArray.length; i++) {
+  		var v = amplitudeArray[i] / 2;
+
+  		x = cx + ((r+v) * Math.cos(a*i));
+  		y = cy + ((r+v) * Math.sin(a*i));
+
+  		ctx.lineTo(x, y);
+  	}
+
+  	ctx.closePath();
+  	ctx.stroke();
+  	ctx.restore();
+  };
 
 
-
-// Rectangle - classe fille
-var Rectangle = function () {
-    Shape.call(this);
-};
-// La classe fille surcharge la classe parente
-Rectangle.prototype = Object.create(Shape.prototype);
-Rectangle.prototype.constructor = Rectangle;
-
-(function (){
-    initCanvas();
-
-    var coordsTab = [
-        new Point(0,0),
-        new Point(20,0),
-        new Point(20,20),
-        new Point(0,20)
-    ];
-
-    var center = new Point(10,10);
-    var origin = new Ratio(50,50);
-
-    var forme = new Shape(ctx, coordsTab, center, origin);
-    forme.fill('blue');
-    forme.draw(true);
-
-    //requestAnimFrame(drawTimeDomain);
-})();
+  console.log('Canvas object loaded');
+  return {ctx};
+}

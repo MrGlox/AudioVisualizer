@@ -1,7 +1,5 @@
 /**
  * AJOUTER DES VARIABLES SUPPLÉMENTAIRES POUR LA GESTION DE LA FRÉQUENCE
- * TRACER LE CENTRE DU BEAT
- * GÉRER LE LOADER EN ARRANGEANT LE requestAnimFrame
  * CORRIGER LE RESTE DES FUNCTIONS ET LE CODE EN SÉPARANT L'AUDIO DU CANVAS
  * MODIFIER LA STRUCTURE DES MOUVEMENTS AVEC DES DÉPLACEMENTS D'AGENT AFIN DE PERMETTRE PLUS DE FUIDITÉ
  * CRÉER UN TRI DES FRÉQUENCES POUR AVOIR LES BASSES, LE BEAT ET LES OCTAVES
@@ -16,30 +14,6 @@ window.AudioContext = (function (){
 
 var onError = function (e) {
 	console.log(e);
-};
-
-/***
- * INIT UPLOADER
-***/
-var uploadedFile = document.getElementById('file-upload');
-var initLoader = function () {
-	uploadedFile.addEventListener('change', handleManualUploadedFiles);
-
-	function handleManualUploadedFiles(ev){
-		var file = ev.target.files[0];
-		console.log(file);
-		loadSound(file);
-	}
-
-	window.addEventListener('dragover', function(e){
-		e.preventDefault();
-	}, true);
-
-	window.addEventListener('drop', function(e){
-		var data = e.dataTransfer;
-		e.preventDefault();
-		loadSound(data.files[0]);
-	});
 };
 
 /***
@@ -62,7 +36,7 @@ var audioContext,
 	smoothingTimeConstant = 0.8,
 	minDecibels = -100,
 	maxDecibels = -30,
-	audioUrl = "./sound/lettuce.mp3";
+	audioUrl;
 
 /***
  * SOUND INIT FUNCTIONS
@@ -81,19 +55,6 @@ var setupAudioNodes = function () {
 	sourceNode.connect(analyserNode);
 	analyserNode.connect(javascriptNode);
 	javascriptNode.connect(audioContext.destination);
-};
-
-var loadSound = function (url) {
-	var request = new XMLHttpRequest();
-	request.open('GET', url, true);
-	request.responseType = 'arraybuffer';
-	request.onload = function () {
-		audioContext.decodeAudioData(request.response, function (buffer) {
-			audioData = buffer;
-			soundLoaded = true;
-		}, onError);
-	};
-	request.send();
 };
 
 /***
@@ -142,28 +103,19 @@ stop.addEventListener('click', function (e) {
 /***
  * SOUND REFERENCES FUNCTIONS
 ***/
-var getMaxAmp = function (){
+var getAmp = function (){
 	var maxAmplitude = 0;
+	var minAmplitude = 0;
 
 	for (var i = 0; i < amplitudeArray.length; i++) {
 		if(amplitudeArray[i] > maxAmplitude){
 			maxAmplitude = amplitudeArray[i];
-		}
-	}
-
-	return maxAmplitude;
-};
-
-var getMinAmp = function (){
-	var minAmplitude = 1000;
-
-	for (var i = 0; i < amplitudeArray.length; i++) {
-		if(amplitudeArray[i] < minAmplitude){
+		} else if(amplitudeArray[i] < minAmplitude){
 			minAmplitude = amplitudeArray[i];
 		}
 	}
 
-	return minAmplitude;
+	return { maxAmp : maxAmplitude, minAmp : minAmplitude };
 };
 
 var getOffset = function (minAmplitude){
