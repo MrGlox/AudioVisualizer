@@ -30,7 +30,7 @@ var audioContext,
 	startTime = 0,
 	sampleSize = 1024,
 	smoothingTimeConstant = 0.0,
-	fftSize = 128,
+	fftSize = 64,
 	amplitudeArray,
 	soundLoaded = false,
 	smoothingTimeConstant = 0.8,
@@ -120,7 +120,8 @@ var getAmp = function (){
 
 var getOffset = function (minAmplitude){
 	var offset;
-	var min = getMin();
+	var min = getAmp();
+  min = min.minAmp;
 
 	for (var i = 0; i < amplitudeArray.length; i++) {
 		if(amplitudeArray[i] === minAmplitude){
